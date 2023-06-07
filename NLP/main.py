@@ -42,7 +42,7 @@ for i in range(len(output)):
         idx += 1
         continue
 
-print(eqno)
+print("done")
 
 # Printing all strings to txt file
 # with open("example.txt", "w") as f:
