@@ -1,6 +1,7 @@
 from PyPDF2 import PdfReader
+from string import ascii_lowercase as alc
 
-reader = PdfReader('Barnett.pdf')
+reader = PdfReader('Barnett10.pdf')
 
 # Holds char array of pdf
 output = []
@@ -31,19 +32,40 @@ for i in range(len(text)):
         continue
 
 # Dictionary for key (eq. #) and value (index) is eqno
-eqno = {}
-idx = 1
+eqno = []
+inner_vec = []
+idx = 1             # All equations start from 1
+asc = 97            # Ascii for 'a'
+
 
 # Checking for equations
 for i in range(len(output)):
     temp = '(' + str(idx) + ')'
+    tempascii = '(' + str(idx) + chr(asc) + ')'
+    nextTemp = '(' + str(idx+1) + ')'
+    nextAscii = '(' + str(idx+1) + 'a' + ')'
     if temp in output[i]:
-        eqno[idx] = i
+        inner_vec = [idx, i]
+        eqno.append(inner_vec)
         idx += 1
         continue
+    if tempascii in output[i]:
+        inner_vec = [str(idx)+chr(asc), i]
+        eqno.append(inner_vec)
+        asc += 1
+        continue
+    if nextTemp in output[i]:           # Next equation no longer has a, b, c etc.
+        inner_vec = [idx+1, i]
+        eqno.append(inner_vec)
+        idx += 2
+        asc = 97
+        continue
+    if nextAscii in output[i]:          # Next equation moves onto next idx
+        inner_vec = [str((idx+1))+'a', i]
+        eqno.append(inner_vec)
+        idx += 2
+        asc = 98
+        continue
 
-print(eqno)                             # Used for debugging
 
-# Printing all strings to txt file
-# with open("example.txt", "w") as f:
-  # print(output, file=f)
+print(eqno)                             # Debugging
