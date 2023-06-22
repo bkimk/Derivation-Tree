@@ -27,6 +27,14 @@ for i in range(len(eqno)):                                  # Iterating through 
 nx.draw_shell(G, with_labels = True)                                        # Taking graph G, add labels
 plt.savefig("DerivationTree.png")                                           # Output onto DerivationTree.png
 
+# TODO LIST: 
+# D3 javascript work on figuring out tree
+# Seperate output array into paragraphs
+# Ideas for miscellaneous edges
+# Check for other ways to draw graph
+# Find result equation??? seed equation
+# Look for ways to parse Latex Equations
+
 
 
 
