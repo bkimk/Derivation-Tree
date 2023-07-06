@@ -25,5 +25,5 @@ plt.savefig("DerivationTree.png")                                           # Ou
 # TODO LIST: 
 
 # Ideas for miscellaneous edges: if equations close together, add edge. Incorporating grammar (transition words), Seperate output array into paragraphs
-# Ideas for seed equation: parse thorugh conclusion to find important equation, algorithm for most outgoing edges, match conclusion text, with rest of text to see familiarity
-# Look for ways to parse Latex Equations
+# Create adjacency matrix -> Do this in order to remove edges that were connected prior. FOr instance if 4->5->6 but 4->6, 4->6 edge should not exist
+# Figure out how to store mathML components 
