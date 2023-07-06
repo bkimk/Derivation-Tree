@@ -24,6 +24,7 @@ plt.savefig("DerivationTree.png")                                           # Ou
 
 # TODO LIST: 
 
+# Think of ideas for using pre trained Machine Learning model for finding identical texts from conclusion to different areas of text
 # Ideas for miscellaneous edges: if equations close together, add edge. Incorporating grammar (transition words), Seperate output array into paragraphs
 # Create adjacency matrix -> Do this in order to remove edges that were connected prior. FOr instance if 4->5->6 but 4->6, 4->6 edge should not exist
 # Figure out how to store mathML components 
