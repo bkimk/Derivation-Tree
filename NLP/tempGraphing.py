@@ -95,17 +95,14 @@ seedEq(adjList)
 # Debugging 
 # adjList.printGraph()
 
-# Done this week: - parsed lots of documents to find ways to seperate paragraphs (\n (fail), seperate by S1, p1 (overly complicated), found all class names to be same)
-#                 - Created adjacency list Class and bfs variation to make sure a->b->c and a->c doesnt exist
-#                 - Calculating Seed Equation (temporary solution)
-#                 - Created miscellaneous edge between edges that are close together ex 3->4 or 6->7
-#
-# TODO LIST:    - Think of ideas for using pre trained Machine Learning model for finding identical texts from conclusion to different areas of text
+# TODO LIST:    - Think of ideas for using pre trained Machine Learning model for finding identical texts from conclusion to different areas of text. Ex See if capital words are famous person or equation online???
+#               - Write Python Script for parsing through corpus and finding papers that have >= 10 equations
+#               - Seed equation: Conclusion should hold analysis ONLY so find see equation based on outgoing directed edges?? Also, if i take out equation which causes most subgraphs???
+#               - Increase paragraph intervals to one more after each equation
+#               - Write down all logic/bugs fixed/how i fixed them
+#               - Find longest path in DAG by dynamic programming to figure out root of tree
 #               - Ideas for miscellaneous edges: if equations close together, add edge. Incorporating grammar (transition words), Seperate output array into paragraphs
 #               - Figure out how to store mathML components 
 #               - D3 Tree
 #               - If paragraph before equation has capital letter with no period before, equationlink, Fig, eq, parabreak then equation is of important has a name, so shouldnt be any incoming edge
-#
-# Questions:    - Can i assume my algorithm will be used for papers with 10+ equations?
-# has the most subgraphs
-# increase paragraph to after equation
+#               - Should i figure out how i should start formulating paper? Assumptions that I made, intro conclusion, etc
