@@ -1,7 +1,7 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-url = 'file:///C:/Users/brian/Desktop/Derivation-Tree/NLP/BarnettTestCase.html'
+url = 'file:///C:/Users/brian/Desktop/Derivation-Tree/NLP/0907.2648.html'
 html = urlopen(url).read()
 soup = BeautifulSoup(html, 'html.parser')
 
@@ -18,10 +18,10 @@ for script in soup(['p']):                      # For all the tags that have 'p'
     if script.get('class') == ['ltx_p']:        # If class tag is labelled with 'ltx_p'
         script.insert_before("parabreak")       # Insert marker before each paragraph
 
-# Adding edge markers (edgee) before each paragraph
-for script in soup(['a']):                      # For all the tags that have 'p'
-    if script.get('class') == ['ltx_ref']:      # If class tag is labelled with 'ltx_p'
-        script.insert_before("edgee")       # Insert marker before each paragraph
+# Adding edge markers (edgee) before each equation
+for script in soup(['a']):                      # For all the tags that have 'a'
+    if script.get('class') == ['ltx_ref']:      # If class tag is labelled with 'ltx_ref'
+        script.insert_before("equationlink")           # Insert marker before each equation
 
 # get text
 text = soup.get_text(' ', strip=True)           #  strip whitespace from the beginning and end of each bit of text; No more '\n' in text
@@ -51,7 +51,7 @@ asc = 97            # Ascii for 'a'
 
 # Checking for equations + line number
 for i in range(len(output)):
-    if output[i] == 'References' or output[i] == 'references':
+    if output[i] == 'References' or output[i] == 'references':      # Marks the end of paper
         break
     temp = '(' + str(idx) + ')'                     # Equation Number
     tempascii = '(' + str(idx) + chr(asc) + ')'     # Equation Number w/ subequation
@@ -83,17 +83,16 @@ for i in range(len(output)):
 
 paraBreak = []                                  # New array with paragraph breaks
 counter = 0                                     # Counter for current Word in PDF
-temp = 0                                        # Placeholder for most recent paragraph break before equation
-temp1 = 0                                       # Placeholder for index of space in current word
+temp = 0                                        # Placeholder for latest occurence of a paragraph break before equation
 paragraph = 'parabreak'                         # Marker placed to locate paragraph breaks
 for i in range(len(eqno)):                       # Iterating through (Eq, idx number) pairs
     for idx in range(counter, eqno[i][1]-1):     # Iterating through idx between previous Eq and current Eq
         currWord = output[idx]
-        if paragraph == currWord:                   # If there is a '\n' in the current word
-            temp = idx
-    paraBreak.append([(str(i+1)+'start'), temp])
-    counter = eqno[i][1]
-    temp = eqno[i][1]
+        if paragraph == currWord:                   # If there is a parabreak marker...
+            temp = idx                              # Set latest occurence of paragraph break
+    paraBreak.append([(str(i+1)+'start'), temp])    # Append index to paragraph break list
+    counter = eqno[i][1]                            # Set counter to start of next equation
+    temp = eqno[i][1]                               # Set latest occurence of paragraph break to start of next equation
 
 
 # Debugging for paragraph breaks
