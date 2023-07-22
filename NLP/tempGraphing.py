@@ -1,6 +1,7 @@
-from htmlFindEq import eqno
-from htmlFindEq import output
-from htmlFindEq import paraBreak
+from preProcessing import eqno
+from preProcessing import output
+from preProcessing import paraBreak
+from preProcessing import exten
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -75,19 +76,22 @@ for i in range(len(eqno)):
     for idx in range(eqno[i][0]-1):                                 # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
         counter = 0                                                 # Counter for number of words between paragraphs/equations
         eqNum = str(eqno[idx][0])                                   # eqNum = current possible edge
-        for j in range (paraBreak[i][1]+1, eqno[i][1]-1):           # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
-            counter += 1                                            # Increment word counter
-            # test = output[j]                                               
-            if (eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):         # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
+        for j in range (paraBreak[i][1]+1, eqno[i][1]-1):           # Iterating through the strings between start and actual equation ex. 433 to 573; 573 to 643
+            counter += 1                                            # Increment word counter                                            
+            if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):         # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
                 if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
                     adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
         # If number of words between equations is less then arbitrary number (20) 
         # and we are on last iteration of equations, 
-        if counter < 20 and (idx+1 == eqno[i][0]-1):      
-            # print(eqno[idx][0], ', ', eqno[i][0])                
+        if counter < 20 and (idx+1 == eqno[i][0]-1):                 
             adjList.addEdge(eqno[idx][0], eqno[i][0])                       # Set manual edge between two equations. Ex. 6->7, 3->4
             G.add_edge(eqno[idx][0], eqno[i][0])                            # Set manual edge between two equations. Ex. 6->7, 3->4
+        for j in range (eqno[i][1]+1, exten[i][1]):                 # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
+            if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):          # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
+                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
+                    adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
+                    G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
 nx.draw_shell(G, with_labels = True)                                        # Taking graph G, add labels
 plt.savefig("DerivationTree.png")                                           # Output onto DerivationTree.png
 seedEq(adjList)
@@ -95,14 +99,21 @@ seedEq(adjList)
 # Debugging 
 # adjList.printGraph()
 
-# TODO LIST:    - Think of ideas for using pre trained Machine Learning model for finding identical texts from conclusion to different areas of text. Ex See if capital words are famous person or equation online???
-#               - Write Python Script for parsing through corpus and finding papers that have >= 10 equations
-#               - Seed equation: Conclusion should hold analysis ONLY so find see equation based on outgoing directed edges?? Also, if i take out equation which causes most subgraphs???
-#               - Increase paragraph intervals to one more after each equation
-#               - Write down all logic/bugs fixed/how i fixed them
-#               - Find longest path in DAG by dynamic programming to figure out root of tree
-#               - Ideas for miscellaneous edges: if equations close together, add edge. Incorporating grammar (transition words), Seperate output array into paragraphs
-#               - Figure out how to store mathML components 
-#               - D3 Tree
+# Issues with logic:    
+#               - Increase paragraph intervals to one more after each equation (I do not feel ok with this) (Still really good idea since ive seen several examples already, but needs tweaking)
+#               - Creating edges between equations with few words between them (I also do not feel ok with this) ex. 0907.2720
+#               - Ideas for miscellaneous edges: Incorporating grammar (transition words) 
 #               - If paragraph before equation has capital letter with no period before, equationlink, Fig, eq, parabreak then equation is of important has a name, so shouldnt be any incoming edge
+# TODO LIST:    - Think of ideas for finding identical texts from conclusion to different areas of text.
+#               - Figure out how to store mathML components 
+#                 (Create array of mathML componenets and run some sort of algorithm that gives similarity levels. Edit graph so that this array of mathML is part of the class)
+#                 (Look at 0907.2744)
+#                 (Look over website with different strategies)
+#               - Edge priority levels: Is there reference to author?/is there an equation directly linked? (same priority level) If not mve onto finding similar texts from other equations ex. 0907.2648 and ex 0907.2794
+#               - Find longest path in DAG by dynamic programming to figure out root of tree
+#               - Seed equation: Conclusion should hold analysis ONLY so find see equation based on outgoing directed edges?? Also, if i take out equation which causes most subgraphs???
+#               - Write down all logic/bugs fixed/how i fixed them
+#               - overleaf
+# Questions:    - Write Python Script for parsing through corpus and finding papers that have >= 10 equations
 #               - Should i figure out how i should start formulating paper? Assumptions that I made, intro conclusion, etc
+#               - Can I assume there is a reference to an equation ex 0907.2798

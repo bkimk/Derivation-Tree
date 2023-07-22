@@ -18,10 +18,10 @@ for script in soup(['p']):                      # For all the tags that have 'p'
     if script.get('class') == ['ltx_p']:        # If class tag is labelled with 'ltx_p'
         script.insert_before("parabreak")       # Insert marker before each paragraph
 
-# Adding edge markers (edgee) before each equation
+# Adding edge markers (edge) before each equation
 for script in soup(['a']):                      # For all the tags that have 'a'
     if script.get('class') == ['ltx_ref']:      # If class tag is labelled with 'ltx_ref'
-        script.insert_before("equationlink")           # Insert marker before each equation
+        script.insert_before("equationlink")       # Insert marker before each equation
 
 # get text
 text = soup.get_text(' ', strip=True)           #  strip whitespace from the beginning and end of each bit of text; No more '\n' in text
@@ -53,24 +53,24 @@ asc = 97            # Ascii for 'a'
 for i in range(len(output)):
     if output[i] == 'References' or output[i] == 'references':      # Marks the end of paper
         break
-    temp = '(' + str(idx) + ')'                     # Equation Number
-    tempascii = '(' + str(idx) + chr(asc) + ')'     # Equation Number w/ subequation
-    nextTemp = '(' + str(idx+1) + ')'               # Next Equation Number 
-    nextAscii = '(' + str(idx+1) + 'a' + ')'        # Next Equation Number w/ subequation
-    if temp in output[i]:                       # Equation is regular
+    temp = str(idx)                     # Equation Number
+    tempascii = str(idx) + chr(asc)     # Equation Number w/ subequation
+    nextTemp = str(idx+1)               # Next Equation Number 
+    nextAscii = str(idx+1) + 'a'        # Next Equation Number w/ subequation
+    if i >= 1 and temp in output[i] and output[i-1] == 'mathequation':                       # Equation is regular
         eqno.append([idx, i])
         idx += 1
         continue
-    if tempascii in output[i]:                  # Equation has subequation
+    if i >= 1 and tempascii in output[i] and output[i-1] == 'mathequation':                  # Equation has subequation
         eqno.append([str(idx)+chr(asc), i])
         asc += 1
         continue
-    if nextTemp in output[i]:           # Next equation no longer has a, b, c etc.
+    if i >= 1 and nextTemp in output[i] and output[i-1] == 'mathequation':           # Next equation no longer has a, b, c etc.
         eqno.append([idx+1, i])
         idx += 2
         asc = 97
         continue
-    if nextAscii in output[i]:          # Next equation moves onto next idx w/ subequation
+    if i >= 1 and nextAscii in output[i] and output[i-1] == 'mathequation':          # Next equation moves onto next idx w/ subequation
         eqno.append([str((idx+1))+'a', i])
         idx += 2
         asc = 98
@@ -94,9 +94,22 @@ for i in range(len(eqno)):                       # Iterating through (Eq, idx nu
     counter = eqno[i][1]                            # Set counter to start of next equation
     temp = eqno[i][1]                               # Set latest occurence of paragraph break to start of next equation
 
+# Extend range of text from end of equation to one sentence after
+exten = []                                      # List for holding the chunks of text after the equation
+for idx, eqNum in enumerate(eqno):
+    startIdx = eqNum[1]                         # Start of the portion of text AFTER the equation
+    while '.' not in output[startIdx]:
+        if startIdx+2 < len(output)-1 and ('Eq' in output[startIdx+1] or 'Fig' in output[startIdx+1] or 'i.e.' in output[startIdx+1]):      # Break when there is period but also no Eq or Fig
+            startIdx += 2
+            continue
+        if idx+1 < eqno[len(eqno)-1][0] and startIdx+1 == paraBreak[idx+1][1]:       # If next index exists and If the paragraph for the next equation comes right after, skip this equation
+            break
+        startIdx += 1
+    exten.append([str(eqno[idx][0])+'end',startIdx])      # Append current index as end of section
+
+
 
 # Debugging for paragraph breaks
 # print("Paragraph breaks: ", paraBreak)
 # print("No Paragraph breaks: ", eqno)
-# print(output[2205])
-
+# print("Paragraph extension: ", exten)
