@@ -5,6 +5,9 @@ url = 'file:///C:/Users/brian/Desktop/Derivation-Tree/NLP/0907.2648.html'
 html = urlopen(url).read()
 soup = BeautifulSoup(html, 'html.parser')
 
+# Chug all math equations into a array of mathml
+results = soup.findAll("math", {"display" : "block"})
+
 # Replace MathML with the text "mathequation"
 for script in soup(['math']):
     script.string = 'mathequation'
