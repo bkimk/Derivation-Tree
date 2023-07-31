@@ -3,9 +3,7 @@ from preProcessing import output
 from preProcessing import paraBreak
 from preProcessing import exten
 from preProcessing import results
-import math
-import re
-from collections import Counter
+import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -69,28 +67,71 @@ def seedEq(directedGraph):
             eqNum = key
     print('Seed Equation: ', eqNum)
 
+# DP solution to finding all common substrings (Starting from largest w/o duplicates)
+# Taking in 2 equations, will create a matrix showing matching substring
 
-# Acquiring the cosine btwen 2 vectors
+def LongestCommonSubstring(equation1, equation2):
 
-def get_cosine(vec1, vec2):
-    intersection = set(vec1.keys()) & set(vec2.keys())
-    numerator = sum([vec1[x] * vec2[x] for x in intersection])
+    # Matrix of size length of first equation X length of second equation
+    Matrix = [ [0] * len(equation2) for i in range(len(equation1))]
 
-    sum1 = sum([vec1[x] ** 2 for x in list(vec1.keys())])
-    sum2 = sum([vec2[x] ** 2 for x in list(vec2.keys())])
-    denominator = math.sqrt(sum1) * math.sqrt(sum2)
+    # Populating Matrix
+    for i in range(len(equation1)):
+        for j in range(len(equation2)):
+            if equation1[i] == equation2[j]:
+                if i == 0 or j == 0:
+                    Matrix[i][j] = 1
+                else:
+                    Matrix[i][j] = Matrix[i-1][j-1]+1
+            else:
+                Matrix[i][j] = 0
 
-    if not denominator:
-        return 0.0
+    # Finding max substring lengths
+    # maxi holds max value in matrix, subLen arr holds all common substring lengths, brk boolean for checking when to break
+    maxi = np.amax(Matrix)
+    subLen = []
+    brk = False
+    while maxi > 2:
+        # Double For Loop for finding substr with max length
+        for i in range(len(equation1)):
+            for j in range(len(equation2)):
+                # Once found, iterate through area of matrix to see if occupied by any previous substring
+                if Matrix[i][j] == maxi:
+                    for x in range(i-maxi-1, i):
+                        for y in range(j-maxi-1, j):
+                            # If space is reserved by any other substring set values to all -1 AND BREAK !!!
+                            if Matrix[x][y] == -1:
+                                brk == True
+                                break
+                        # Break to get out of row for loop after iterating through substring area of matrix
+                        if brk == True:
+                            break
+                    # If break boolean was never changed to True, that means no other substring occupied
+                    # the current area. Then, add substring length to substring array
+                    if brk == False:
+                        subLen.append(maxi)
+                    # Always set substring area to -1 since has been added to list/already occupied by another substring
+                    for x in range(i-int(maxi)-1, i):
+                        for y in range(j-int(maxi)-1, j):
+                            Matrix[x][y] = -1
+                    brk = True
+                    break
+                else:
+                    continue
+            if brk == True:
+                break
+        brk = False
+        maxi = np.amax(Matrix)
+    # Once Matrix has been iterated, calculate percentage of equation that was shared
+    # Change current % after further trials
+    if np.sum(subLen)/len(equation1) > 0.25:
+        return True
+    elif np.sum(subLen)/len(equation2) > 0.25:
+        return True
     else:
-        return float(numerator) / denominator
+        return False
 
-# Make text into vector
-def text_to_vector(text):
-    words = re.compile(r"\w+").findall(text)
-    return Counter(words)
-
-# Graphing
+# Main Graphing
 counter = 0                                                 # Counting number of elements between intervals
 adjList = directGraph()                                     # Create Adjacency List Object            
 G = nx.DiGraph()                                            # Create Directed Graph
@@ -103,17 +144,12 @@ for i in range(len(eqno)):
         counter = 0                                                 # Counter for number of words between paragraphs/equations
         eqNum = str(eqno[idx][0])                                   # eqNum = current possible edge
         for j in range (paraBreak[i][1]+1, eqno[i][1]-1):           # Iterating through the strings between start and actual equation ex. 433 to 573; 573 to 643
-            counter += 1                                            # Increment word counter
+            # counter += 1                                            # Increment word counter
             if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):         # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
                 if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
                     edgeFlag = True                                         # Edge was added so true
                     adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
-        # If number of words between equations is less then arbitrary number (20) 
-        # and we are on last iteration of equations, 
-        # if counter < 20 and (idx+1 == eqno[i][0]-1):                 
-        #     adjList.addEdge(eqno[idx][0], eqno[i][0])                       # Set manual edge between two equations. Ex. 6->7, 3->4
-        #     G.add_edge(eqno[idx][0], eqno[i][0])                            # Set manual edge between two equations. Ex. 6->7, 3->4
         for j in range (eqno[i][1]+1, exten[i][1]):                 # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
             if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):          # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
                 if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
@@ -122,12 +158,11 @@ for i in range(len(eqno)):
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
     # If no previous edges were added for an equation (node), look for cosine similarity. If greater then 0.5 (arbitrary similarity), add edge
     if edgeFlag == False:
-        vector1 = text_to_vector(str(results[i]))                            # change curr mathML element to vector
-        for idx in range(eqno[i][0]-1):                                 # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
-            vector2 = text_to_vector(str(results[idx]))                      # Change possible edge equation mathML to vector
-            cosine = get_cosine(vector1, vector2)                       # Calculate cosine
-            if cosine > 0.7:
-                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
+        baseEquation = str(results[i])                                      # change curr mathML element to string
+        for idx in range(eqno[i][0]-1):                                     # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
+            compareEquation = str(results[idx])                             # Change possible edge equation mathML to vector
+            if LongestCommonSubstring(baseEquation, compareEquation) == True:         # If similarity is greater then arbitrary percentage,
+                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:
                     adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
 
@@ -140,17 +175,11 @@ plt.savefig("DerivationTree.png")                                           # Ou
 # adjList.printGraph()
  
 # TODO LIST:
-#               - Fix error with BFS, cosine similarity is not right. Need something with similar substrings not vectors
-#               - Think of ideas for finding identical texts from conclusion to different areas of text.
-#               - Figure out how to store mathML components 
-#                 (Create array of mathML componenets and run some sort of algorithm that gives similarity levels. Edit graph so that this array of mathML is part of the class)
-#                 (Look at 0907.2744)
-#                 (Look over website with different strategies)
-#               - Edge priority levels: Is there reference to author?/is there an equation directly linked? (same priority level) If not mve onto finding similar texts from other equations ex. 0907.2648 and ex 0907.2794
+#               - Wait to receive mathml converter. Then fix longest common subsequence checking similar substrings
+#               - Create script for getting texts with 10+ documents
 #               - Find longest path in DAG by dynamic programming to figure out root of tree
+#               - Fix error with BFS.
 #               - Seed equation (Currently wrong): Conclusion should hold analysis ONLY so find see equation based on outgoing directed edges?? Also, if i take out equation which causes most subgraphs???
 #               - overleaf
 #               - Ideas for miscellaneous edges: Incorporating grammar (transition words) 
 #               - If paragraph before equation has capital letter with no period before, equationlink, Fig, eq, parabreak then equation is of important has a name, so shouldnt be any incoming edge
-# Questions:    - Write Python Script for parsing through corpus and finding papers that have >= 10 equations
-#               - Should i figure out how i should start formulating paper? Assumptions that I made, intro conclusion, etc
