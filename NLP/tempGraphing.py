@@ -183,3 +183,10 @@ plt.savefig("DerivationTree.png")                                           # Ou
 #               - overleaf
 #               - Ideas for miscellaneous edges: Incorporating grammar (transition words) 
 #               - If paragraph before equation has capital letter with no period before, equationlink, Fig, eq, parabreak then equation is of important has a name, so shouldnt be any incoming edge
+#               - Make longest Common Substring a DP function 
+
+# Finished:
+#               - Tried running sumedh mathml -> equation tree converter
+#               - Searched internet for alternatives
+#               - Longest Common Substring Equation (Turn into DP function?)
+#               - OverLeaf
