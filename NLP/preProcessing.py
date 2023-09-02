@@ -2,17 +2,17 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import json
 
-url = 'file:///C:/Users/brian/Desktop/Derivation-Tree/NLP/articles/0907.2648.html'
+url = 'file:///C:/Users/brian/Desktop/MLP/Derivation-Tree/NLP/articles/0907.2648.html'
 html = urlopen(url).read()
 soup = BeautifulSoup(html, 'html.parser')
 
 # Chug all math equations into a array of mathml
-results = soup.findAll("math", {"display" : "block"})
+# results = soup.findAll("math", {"display" : "block"})
 
-for result in results:
-    with open('list.json', 'w') as file:
-        json.dump(str(result), file)
-    break
+# for result in results:
+  #  with open('list.json', 'w') as file:
+   #     json.dump(str(result), file)
+    #break
 
 # Replace MathML with the text "mathequation"
 for script in soup(['math']):
@@ -119,6 +119,6 @@ for idx, eqNum in enumerate(eqno):
 
 
 # Debugging for paragraph breaks
-# print("Paragraph breaks: ", paraBreak)
-# print("No Paragraph breaks: ", eqno)
-# print("Paragraph extension: ", exten)
+print("Paragraph breaks: ", paraBreak)
+print("No Paragraph breaks: ", eqno)
+print("Paragraph extension: ", exten)
