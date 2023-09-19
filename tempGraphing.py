@@ -160,6 +160,7 @@ plt.savefig("DerivationTree.png")                                           # Ou
 # adjList.printGraph()
  
 # TODO LIST:
+#               - Collecting dataset on MLP group repo (Article ID, equation ID, adjacency list, who labelled it)
 #               - Wait to receive mathml converter. Then fix longest common subsequence checking similar substrings
 #               - Create script for getting texts with 10+ documents
 #               - Find longest path in DAG by dynamic programming to figure out root of tree
