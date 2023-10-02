@@ -6,6 +6,7 @@ from preProcessing import results
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+
 # Class for Adjacency List for Directed Graphs
 class directGraph:
     # Dictionary for directed graph representation
@@ -28,6 +29,7 @@ class directGraph:
             return self.graph[node]
         else:
             return []
+        
 # BFS function for removing repetitive edges. (Ex. a->b->c then edge a->c would be unecessary)
 # Return true if there is already a existing path. Else, false
 def bfs(src, dest, directedGraph):
@@ -42,6 +44,7 @@ def bfs(src, dest, directedGraph):
                 visited.append(i)
                 que.append(i)
     return False
+
 # Calculating Seed Equation: Finding number of incoming x outgoing nodes
 def seedEq(directedGraph):
     max = 0
@@ -60,6 +63,7 @@ def seedEq(directedGraph):
             max = tempMax
             eqNum = key
     print('Seed Equation: ', eqNum)
+
 # DP solution to finding all common substrings (Starting from largest w/o duplicates)
 # Taking in 2 equations, will create a matrix showing matching substring
 def LongestCommonSubstring(equation1, equation2):

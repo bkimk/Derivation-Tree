@@ -2,6 +2,20 @@
 # USE FOR LATER ONCE MATHML COMPONENTS HAVE BEEN TRANSLATED #
 #############################################################
 
+class Node:
+    def __init__(self, v):
+        self.data = v
+        self.left = None
+        self.right = None
+
+# Function for MathML Tree Post-Order Traversal
+def POT(Tree):
+    if Tree == None:            # If None then Stop
+        return
+    POT(Tree.left)              # Recurse Left
+    POT(Tree.right)             # Recurse Right
+    print(Tree.data, end=' ')   # Print Node Data           
+
 # Debug function that prints pretty Matrix
 def printMatrix(Matrix):
     for row in Matrix:
@@ -62,4 +76,5 @@ def LongestCommonSubstring(equation1, equation2):
     else:
         return False
 
-LongestCommonSubstring('deskchair', 'chairlemon')
+
+#LongestCommonSubstring('deskchair', 'chairlemon')

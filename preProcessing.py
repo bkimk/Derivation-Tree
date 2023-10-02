@@ -1,9 +1,15 @@
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
+from mathMLtoOP import *
 import json
 import nltk
+import urllib.parse
+import mathml2omml
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize, sent_tokenize
+
+# unnecessary attributes to remove from mathml string
+REMOVE_ATTRIBUTES = ["id", "xref", "type", "cd", "encoding"]
 
 # Set up Beautiful Soup Parser
 url = 'file:///C:/Users/brian/Desktop/MLP/Derivation-Tree/articles/0907.2648.html'
@@ -11,16 +17,126 @@ html = urlopen(url).read()
 soup = BeautifulSoup(html, 'html.parser')
 
 ########################################################
-# KEEP MATHML FOR NOW UNTIL SUMEDH PROGRAM WORKS       #
+# SUMEDH'S PROGRAM To Parse MathML Block Equations     #
+########################################################
+'''
+# Parse the URL to extract the local file path
+url_parts = urllib.parse.urlparse(url)
+local_path = urllib.parse.unquote(url_parts.path)
+
+# Remove leading '/' if it exists
+if local_path.startswith('/'):
+    local_path = local_path[1:]
+
+def toMathMLStrings(url):
+    # Open the local file using the extracted path
+    with open(url, "r", encoding="utf-8") as f:
+        xml = f.read()
+    
+    soup = BeautifulSoup(xml, features='lxml')
+    mathml_strings = []
+    
+    for mms in soup.find_all("math"):
+        if "display" in mms.attrs and mms["display"] != "block":
+            # Skip non-block equations
+            continue
+
+        for attr in REMOVE_ATTRIBUTES:
+            # Remove unnecessary attributes
+            [s.attrs.pop(attr) for s in mms.find_all() if attr in s.attrs]
+
+        mathml_strings.append([mms.prettify(), mms.get("alttext", "")])
+
+    return mathml_strings
+
+mathml_strings = toMathMLStrings(local_path)
+
+'''
+
 ########################################################
 
-#results = soup.findAll("math", {"display" : "block"})
-#for result in results:
-    #with open('list.json', 'w') as file:
-        #json.dump(str(result), file)
-    #break
+# Parse all block/numbered equations within Math paper
+results = soup.findAll("math", {"display" : "block"})
+
+# Test Trees
+string2 = str(results[0])
+string3 = str(results[1])
+
+# Convert into OP Trees
+root2 = toOpTree(string2)
+root3 = toOpTree(string3)
+
+# Custom In Order Traversal of Tree to parse through all Children nodes in order
+def IOT(root):
+
+    if root is None:
+        return
+
+    if root.children:
+        # Traverse the leftmost subtree
+        IOT(root.children[0])
+
+        try:
+            # Attempt to print the root.value, encoding and decoding as necessary
+            print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+        except UnicodeEncodeError:
+            # Handle the UnicodeEncodeError gracefully
+            print("Unable to print root.value due to encoding issue")
+
+        # Traverse the next subtree, if it exists
+        for i in range(1, len(root.children)):
+            # Print the root value again
+            try:
+                # Attempt to print the root.value, encoding and decoding as necessary
+                print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+            except UnicodeEncodeError:
+                # Handle the UnicodeEncodeError gracefully
+                print("Unable to print root.value due to encoding issue")
+
+            # Traverse the next subtree
+            IOT(root.children[i])
+    else:
+        # If there are no children, just print the root value
+        try:
+            # Attempt to print the root.value, encoding and decoding as necessary
+            print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+        except UnicodeEncodeError:
+            # Handle the UnicodeEncodeError gracefully
+            print("Unable to print root.value due to encoding issue")
 
 ########################################################
+# Previous IOT Attempt                                 #
+########################################################
+           
+'''
+    if root == None:
+        return
+    if len(root.children) > 0:
+        IOT(root.children[0])
+    try:
+        # Attempt to print the root.value, encoding and decoding as necessary
+        print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+    except UnicodeEncodeError:
+        # Handle the UnicodeEncodeError gracefully
+        print("Unable to print root.value due to encoding issue")
+    for i in range(1, len(root.children)):
+        IOT(root.children[i])
+        if i != len(root.children)-1:
+            try:
+                # Attempt to print the root.value, encoding and decoding as necessary
+                print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+            except UnicodeEncodeError:
+                # Handle the UnicodeEncodeError gracefully
+                print("Unable to print root.value due to encoding issue")
+'''
+
+########################################################
+
+# Print in order traversal of Tree
+IOT(root2)
+#IOT(root3)
+
+#TODO: Compare Trees to check for similar subtrees -> If similar to a certain degree, derivation is tree
 
 # Replace MathML with the text "mathequation"
 for script in soup(['math']):
@@ -165,7 +281,22 @@ for idx, eqNum in enumerate(eqno):                              # Index and (eq#
     exten.append([str(eqno[idx][0])+'end', sentenceEndIdx])     # Append current index as end of section
 
 # Debugging for paragraph breaks
-print("Paragraph breaks: ", paraBreak)
-print("No Paragraph breaks: ", eqno)
-print("Paragraph extension: ", exten)
+#print("Paragraph breaks: ", paraBreak)
+#print("No Paragraph breaks: ", eqno)
+#print("Paragraph extension: ", exten)
+
+'''
+root = toOpTree(string2)
+
+def IOT(root):
+    if root == None:
+        return
+    # numsChildren = len(root.children)
+    print('hello')
+    #IOT(root.children[0])
+    print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+    for i in range(len(root.children)):
+        IOT(root.children[i])
+        print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
+'''
 
