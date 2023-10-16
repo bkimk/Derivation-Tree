@@ -8,18 +8,21 @@ import mathml2omml
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize, sent_tokenize
 
-# unnecessary attributes to remove from mathml string
-REMOVE_ATTRIBUTES = ["id", "xref", "type", "cd", "encoding"]
-
 # Set up Beautiful Soup Parser
 url = 'file:///C:/Users/brian/Desktop/MLP/Derivation-Tree/articles/0907.2648.html'
 html = urlopen(url).read()
 soup = BeautifulSoup(html, 'html.parser')
 
+# Parse all block/numbered equations within Math paper
+results = soup.findAll("math", {"display" : "block"})
+
 ########################################################
 # SUMEDH'S PROGRAM To Parse MathML Block Equations     #
 ########################################################
 '''
+# unnecessary attributes to remove from mathml string
+REMOVE_ATTRIBUTES = ["id", "xref", "type", "cd", "encoding"]
+
 # Parse the URL to extract the local file path
 url_parts = urllib.parse.urlparse(url)
 local_path = urllib.parse.unquote(url_parts.path)
@@ -54,17 +57,30 @@ mathml_strings = toMathMLStrings(local_path)
 '''
 
 ########################################################
+# Debugging Individual Equations                       #
+########################################################
 
-# Parse all block/numbered equations within Math paper
-results = soup.findAll("math", {"display" : "block"})
 
 # Test Trees
-string2 = str(results[0])
-string3 = str(results[1])
+string1 = str(results[0])
+string2 = str(results[1])
+string3 = str(results[2])
+string4 = str(results[3])
+string5 = str(results[4])
+string6 = str(results[5])
+string7 = str(results[6])
+
 
 # Convert into OP Trees
+root1 = toOpTree(string1)
 root2 = toOpTree(string2)
 root3 = toOpTree(string3)
+root4 = toOpTree(string4)
+root5 = toOpTree(string5)
+root6 = toOpTree(string6)
+root7 = toOpTree(string7)
+
+########################################################
 
 # Custom In Order Traversal of Tree to parse through all Children nodes in order
 def IOT(root):
@@ -104,39 +120,9 @@ def IOT(root):
             # Handle the UnicodeEncodeError gracefully
             print("Unable to print root.value due to encoding issue")
 
-########################################################
-# Previous IOT Attempt                                 #
-########################################################
-           
-'''
-    if root == None:
-        return
-    if len(root.children) > 0:
-        IOT(root.children[0])
-    try:
-        # Attempt to print the root.value, encoding and decoding as necessary
-        print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
-    except UnicodeEncodeError:
-        # Handle the UnicodeEncodeError gracefully
-        print("Unable to print root.value due to encoding issue")
-    for i in range(1, len(root.children)):
-        IOT(root.children[i])
-        if i != len(root.children)-1:
-            try:
-                # Attempt to print the root.value, encoding and decoding as necessary
-                print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
-            except UnicodeEncodeError:
-                # Handle the UnicodeEncodeError gracefully
-                print("Unable to print root.value due to encoding issue")
-'''
-
-########################################################
-
-# Print in order traversal of Tree
-IOT(root2)
-#IOT(root3)
-
-#TODO: Compare Trees to check for similar subtrees -> If similar to a certain degree, derivation is tree
+# Print in order traversal of Tree; For Debugging
+# IOT(root2)
+# IOT(root3)
 
 # Replace MathML with the text "mathequation"
 for script in soup(['math']):
@@ -282,21 +268,8 @@ for idx, eqNum in enumerate(eqno):                              # Index and (eq#
 
 # Debugging for paragraph breaks
 #print("Paragraph breaks: ", paraBreak)
-#print("No Paragraph breaks: ", eqno)
+print("No Paragraph breaks: ", eqno)
 #print("Paragraph extension: ", exten)
 
-'''
-root = toOpTree(string2)
 
-def IOT(root):
-    if root == None:
-        return
-    # numsChildren = len(root.children)
-    print('hello')
-    #IOT(root.children[0])
-    print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
-    for i in range(len(root.children)):
-        IOT(root.children[i])
-        print(root.value.encode('utf-8').decode('utf-8', 'ignore'))
-'''
 

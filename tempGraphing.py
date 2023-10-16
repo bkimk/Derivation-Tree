@@ -1,9 +1,5 @@
-from preProcessing import eqno
-from preProcessing import output
-from preProcessing import paraBreak
-from preProcessing import exten
-from preProcessing import results
-import numpy as np
+from preProcessing import *
+from mathMLtoOP import *
 import networkx as nx
 import matplotlib.pyplot as plt
 
@@ -64,65 +60,36 @@ def seedEq(directedGraph):
             eqNum = key
     print('Seed Equation: ', eqNum)
 
-# DP solution to finding all common substrings (Starting from largest w/o duplicates)
-# Taking in 2 equations, will create a matrix showing matching substring
-def LongestCommonSubstring(equation1, equation2):
-    # Matrix of size length of first equation X length of second equation
-    Matrix = [ [0] * len(equation2) for i in range(len(equation1))]
-    # Populating Matrix
-    for i in range(len(equation1)):
-        for j in range(len(equation2)):
-            if equation1[i] == equation2[j]:
-                if i == 0 or j == 0:
-                    Matrix[i][j] = 1
-                else:
-                    Matrix[i][j] = Matrix[i-1][j-1]+1
-            else:
-                Matrix[i][j] = 0
-    # Finding max substring lengths
-    # maxi holds max value in matrix, subLen arr holds all common substring lengths, brk boolean for checking when to break
-    maxi = np.amax(Matrix)
-    subLen = []
-    brk = False
-    while maxi > 2:
-        # Double For Loop for finding substr with max length
-        for i in range(len(equation1)):
-            for j in range(len(equation2)):
-                # Once found, iterate through area of matrix to see if occupied by any previous substring
-                if Matrix[i][j] == maxi:
-                    for x in range(i-maxi-1, i):
-                        for y in range(j-maxi-1, j):
-                            # If space is reserved by any other substring set values to all -1 AND BREAK !!!
-                            if Matrix[x][y] == -1:
-                                brk == True
-                                break
-                        # Break to get out of row for loop after iterating through substring area of matrix
-                        if brk == True:
-                            break
-                    # If break boolean was never changed to True, that means no other substring occupied
-                    # the current area. Then, add substring length to substring array
-                    if brk == False:
-                        subLen.append(maxi)
-                    # Always set substring area to -1 since has been added to list/already occupied by another substring
-                    for x in range(i-int(maxi)-1, i):
-                        for y in range(j-int(maxi)-1, j):
-                            Matrix[x][y] = -1
-                    brk = True
-                    break
-                else:
-                    continue
-            if brk == True:
+# Calculates Subtree Similarity between 2 given OPTrees 
+def partial_tree_match(tree1, tree2):
+    def are_subtrees_similar(node1, node2):
+        if node1 is None and node2 is None:
+            return True
+        if node1 is None or node2 is None:
+            return False
+        if node1.value != node2.value:
+            return False
+        if len(node1.children) != len(node2.children):
+            return False
+        match = True
+        for child1, child2 in zip(node1.children, node2.children):
+            if not are_subtrees_similar(child1, child2):
+                match = False
                 break
-        brk = False
-        maxi = np.amax(Matrix)
-    # Once Matrix has been iterated, calculate percentage of equation that was shared
-    # Change current % after further trials
-    if np.sum(subLen)/len(equation1) > 0.25:
-        return True
-    elif np.sum(subLen)/len(equation2) > 0.25:
-        return True
-    else:
-        return False
+        return match
+
+    def dfs(node1, node2):
+        similarity = 0
+        if are_subtrees_similar(node1, node2):
+            similarity = 1
+        for child1 in node1.children:
+            for child2 in node2.children:
+                similarity += dfs(child1, child2)
+        return similarity
+
+    similarity_score = dfs(tree1, tree2)
+    return similarity_score
+
 # Main Graphing
 counter = 0                                                 # Counting number of elements between intervals
 adjList = directGraph()                                     # Create Adjacency List Object            
@@ -144,15 +111,17 @@ for i in range(len(eqno)):
         for j in range (eqno[i][1]+1, exten[i][1]):                 # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
             if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):          # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
                 if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
-                    edgeFlag = True
+                    edgeFlag = True                                         # Edge was added so true
                     adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
     # If no previous edges were added for an equation (node), look for cosine similarity. If greater then 0.5 (arbitrary similarity), add edge
     if edgeFlag == False:
-        baseEquation = str(results[i])                                      # change curr mathML element to string
+        baseEquation = str(results[i])
+        bE = toOpTree(baseEquation)                                     # change curr mathML element to string
         for idx in range(eqno[i][0]-1):                                     # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
-            compareEquation = str(results[idx])                             # Change possible edge equation mathML to vector
-            if LongestCommonSubstring(baseEquation, compareEquation) == True:         # If similarity is greater then arbitrary percentage,
+            compareEquation = str(results[idx])
+            cE = toOpTree(compareEquation)                           # Change possible edge equation mathML to vector
+            if partial_tree_match(baseEquation, compareEquation) >= 1:         # If similarity is greater then arbitrary percentage,
                 if bfs(eqno[idx][0], eqno[i][0], adjList) == False:
                     adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
                     G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
