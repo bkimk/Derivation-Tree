@@ -1,4 +1,3 @@
-from preProcessing import *
 from mathMLtoOP import *
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -25,9 +24,16 @@ class directGraph:
             return self.graph[node]
         else:
             return []
-        
-# BFS function for removing repetitive edges. (Ex. a->b->c then edge a->c would be unecessary)
-# Return true if there is already a existing path. Else, false
+
+# ------------------------------------ # Seed Question --------------------------------------
+# Description:  BFS function for removing repetitive edges. 
+#               (Ex. a->b->c then edge a->c would be unecessary)
+#               Return true if there is already a existing path. Else, false
+# @Param    src: Source node (equation)
+#           dest: Destination node (equation)
+#           directedGraph: directGraph object
+# --------------------------------------------------------------------------------------------
+
 def bfs(src, dest, directedGraph):
     visited = [src]
     que = [src]
@@ -41,7 +47,10 @@ def bfs(src, dest, directedGraph):
                 que.append(i)
     return False
 
-# Calculating Seed Equation: Finding number of incoming x outgoing nodes
+# ------------------------------------ # Seed Question --------------------------------------
+# Description: Calculating Seed Equation; Finding number of incoming x outgoing nodes 
+# @Param    directedGraph: directGraph object
+# --------------------------------------------------------------------------------------------
 def seedEq(directedGraph):
     max = 0
     eqNum = 'NULL'
@@ -60,7 +69,11 @@ def seedEq(directedGraph):
             eqNum = key
     print('Seed Equation: ', eqNum)
 
-# Calculates Subtree Similarity between 2 given OPTrees 
+# ---------------------------------- # Subtree Similarity ------------------------------------
+# Description: Calculates Subtree Similarity between 2 given OPTrees 
+# @Param    tree1 = OP Tree Root
+#           tree2 = OP Tree Root
+# --------------------------------------------------------------------------------------------
 def partial_tree_match(tree1, tree2):
     def are_subtrees_similar(node1, node2):
         if node1 is None and node2 is None:
@@ -86,66 +99,62 @@ def partial_tree_match(tree1, tree2):
             for child2 in node2.children:
                 similarity += dfs(child1, child2)
         return similarity
-
     similarity_score = dfs(tree1, tree2)
     return similarity_score
-
-# Main Graphing
-counter = 0                                                 # Counting number of elements between intervals
-adjList = directGraph()                                     # Create Adjacency List Object            
-G = nx.DiGraph()                                            # Create Directed Graph
-for i in range(len(eqno)):
-    if eqno[i][0] == 1:                                         # If scanning through paragraph before first equation, skip since no prior equations for linkage
-        continue
-    edgeFlag = False                                            # Boolean to check if an edge has been added. If none for an equation, check cosine similarity with all equations before it
-    for idx in range(eqno[i][0]-1):                                 # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
-        counter = 0                                                 # Counter for number of words between paragraphs/equations
-        eqNum = str(eqno[idx][0])                                   # eqNum = current possible edge
-        for j in range (paraBreak[i][1]+1, eqno[i][1]-1):           # Iterating through the strings between start and actual equation ex. 433 to 573; 573 to 643
-            # counter += 1                                            # Increment word counter
-            if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):         # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
-                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
-                    edgeFlag = True                                         # Edge was added so true
-                    adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
-                    G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
-        for j in range (eqno[i][1]+1, exten[i][1]):                 # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
-            if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):          # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
-                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
-                    edgeFlag = True                                         # Edge was added so true
-                    adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
-                    G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
-    # If no previous edges were added for an equation (node), look for cosine similarity. If greater then 0.5 (arbitrary similarity), add edge
-    if edgeFlag == False:
-        baseEquation = str(results[i])
-        bE = toOpTree(baseEquation)                                     # change curr mathML element to string
-        for idx in range(eqno[i][0]-1):                                     # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
-            compareEquation = str(results[idx])
-            cE = toOpTree(compareEquation)                           # Change possible edge equation mathML to vector
-            if partial_tree_match(baseEquation, compareEquation) >= 1:         # If similarity is greater then arbitrary percentage,
-                if bfs(eqno[idx][0], eqno[i][0], adjList) == False:
-                    adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
-                    G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
-# Draw graph and put onto png
-nx.draw_shell(G, with_labels = True)                                        # Taking graph G, add labels
-plt.savefig("DerivationTree.png")                                           # Output onto DerivationTree.png
-# seedEq(adjList)
-# Debugging 
-# adjList.printGraph()
  
-# TODO LIST:
-#               - Collecting dataset on MLP group repo (Article ID, equation ID, adjacency list, who labelled it)
-#               - Wait to receive mathml converter. Then fix longest common subsequence checking similar substrings
-#               - Create script for getting texts with 10+ documents
-#               - Find longest path in DAG by dynamic programming to figure out root of tree
-#               - Fix error with BFS.
-#               - Seed equation (Currently wrong): Conclusion should hold analysis ONLY so find see equation based on outgoing directed edges?? Also, if i take out equation which causes most subgraphs???
-#               - overleaf
-#               - Ideas for miscellaneous edges: Incorporating grammar (transition words) 
-#               - If paragraph before equation has capital letter with no period before, equationlink, Fig, eq, parabreak then equation is of important has a name, so shouldnt be any incoming edge
-#               - Make longest Common Substring a DP function 
+# ------------------------------------ # End of Interval -------------------------------------
+# Description: Graphing function; Iterates through given Mathematical document and draws edges
+#              Between given equations
+# @Param    eqno = Tuples of (Eq#, Idx# of Eq#)
+#           paraBreak = Tuples of (Eq#, start of Paragraph interval for that specific eq#)
+#           output = Array of strings/words for HTML doc
+#           results = Array of mathML elements
+#           exten = Tuples of (Eq#, end interval; one sentence after)
+# --------------------------------------------------------------------------------------------
+def derivationTree(eqno, paraBreak, output, results, exten):
+    counter = 0                                                 # Counting number of elements between intervals
+    adjList = directGraph()                                     # Create Adjacency List Object            
+    G = nx.DiGraph()                                            # Create Directed Graph
+    for i in range(len(eqno)):
+        if eqno[i][0] == 1:                                         # If scanning through paragraph before first equation, skip since no prior equations for linkage
+            continue
+        edgeFlag = False                                            # Boolean to check if an edge has been added. If none for an equation, check cosine similarity with all equations before it
+        for idx in range(eqno[i][0]-1):                                 # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
+            counter = 0                                                 # Counter for number of words between paragraphs/equations
+            eqNum = str(eqno[idx][0])                                   # eqNum = current possible edge
+            for j in range (paraBreak[i][1]+1, eqno[i][1]-1):           # Iterating through the strings between start and actual equation ex. 433 to 573; 573 to 643
+                # counter += 1                                            # Increment word counter
+                if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):         # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
+                    if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
+                        edgeFlag = True                                         # Edge was added so true
+                        adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
+                        G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
+            for j in range (eqno[i][1]+1, exten[i][1]):                 # Iterating through the strings between each equation ex. 433 to 573; 573 to 643
+                if (j >= 2 and eqNum in output[j]) and ('equationlink' in output[j-1]) and ('Fig' not in output[j-2]):          # If correct eq number is in curr element/ 'edgee' marker in previous element/ 'equationlink' is NOT in element before that                         
+                    if bfs(eqno[idx][0], eqno[i][0], adjList) == False:         # If there is no path between the two edges,
+                        edgeFlag = True                                         # Edge was added so true
+                        adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
+                        G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
+        # If no previous edges were added for an equation (node), look for cosine similarity. If greater then 0.5 (arbitrary similarity), add edge
+        if edgeFlag == False:
+            baseEquation = str(results[i])
+            bE = toOpTree(baseEquation)                                     # change curr mathML element to string
+            for idx in range(eqno[i][0]-1):                                     # Scanning for possible edges ex. 1 to 3; 1 to 7 (-1 since not looking for current equation number)
+                compareEquation = str(results[idx])
+                cE = toOpTree(compareEquation)                           # Change possible edge equation mathML to vector
+                if partial_tree_match(bE, cE) >= 1:         # If similarity is greater then arbitrary percentage,
+                    if bfs(eqno[idx][0], eqno[i][0], adjList) == False:
+                        adjList.addEdge(eqno[idx][0], eqno[i][0])               # Create an edge
+                        G.add_edge(eqno[idx][0], eqno[i][0])                    # Edge from idx to i
+    # Draw graph and put onto png
+    nx.draw_shell(G, with_labels = True)                                        # Taking graph G, add labels
+    plt.savefig("DerivationTree.png")                                           # Output onto DerivationTree.png
+    # seedEq(adjList)
+    # Debugging 
+    # adjList.printGraph()
+    return adjList
 
-# Finished:
-#               - Tried running sumedh mathml -> equation tree converter
-#               - Searched internet for alternatives
-#               - Longest Common Substring Equation (Turn into DP function?)
+# TODO LIST:
+#               - Testing program on multiple Mathematical Documents
 #               - Overleaf
+#               - Push all code to MLP Repo
